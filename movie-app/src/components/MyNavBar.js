@@ -1,8 +1,11 @@
 import {Container, Nav, Navbar} from "react-bootstrap";
-
-import * as events from "events";
 import {Outlet, useNavigate} from "react-router-dom";
 
+/**
+ * The component MyNavBar allows navigating between pages in the website.
+ * @returns {JSX.Element}
+ * @constructor
+ */
 export default function MyNavBar(){
 
     const navigate = useNavigate()
@@ -10,9 +13,9 @@ export default function MyNavBar(){
         event.preventDefault();
         navigate(`${path}`)
     }
+
     return (
         <>
-
             <Navbar style={{height:"55px" ,marginTop:"8px" }} >
                 <Container >
                     <h1 className={"text-warning " }>Letflix</h1>

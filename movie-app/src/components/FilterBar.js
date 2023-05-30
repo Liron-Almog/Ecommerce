@@ -1,7 +1,18 @@
-import { Col, Form, Row} from "react-bootstrap";
-import React, {useEffect, useState} from "react";
+import {Col, Form, Row} from "react-bootstrap";
+import React, {useState} from "react";
 import CustomLabel from "./CustomLabel";
-export default function FilterBar({filterQuery,setFilterQuery}){
+import SearchButtonFilter from "./SearchButtonFilter";
+
+/**
+ * The component contains the filters for the search.
+ * @param filterQuery saves the query after the filter
+ * @param setFilterQuery
+ * @param handleClickSearch
+ * @returns {JSX.Element}
+ * @constructor
+ */
+
+export default function FilterBar({filterQuery,setFilterQuery,handleClickSearch}){
 
     const [rangeValue, setRangeValue] = useState(undefined);
     const [statusRange, setStatusRange] = useState(true);
@@ -12,6 +23,7 @@ export default function FilterBar({filterQuery,setFilterQuery}){
 
     return(
         <>
+            <SearchButtonFilter handleClickSearch={handleClickSearch} filterQuery={filterQuery}/>
             <Row className={"mt-3"}>
                 <Col className={"col-5"}>
                     <Form>

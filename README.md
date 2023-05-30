@@ -35,4 +35,16 @@ Look at the DebugController class. It has a method called "addPurchase" that rec
 When you develop your own controller, you must declare the repository member exactly as it is declared in the DebugController class.
 Then you can use it to store purchases in the DB (repository.save(purchase)).
 
-## Still have problems? Come to class.
+## Search attributes:
+- The user can search for a movie by name, using the search bar.
+
+
+
+- The user can search for a movie by using the following filters:
+- Adult (t/f)
+- Include video (t/f)
+- Sort by (popularity/ revenue/ vote count/ vote average)
+- primary release year
+- genre
+- year
+

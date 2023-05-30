@@ -1,123 +1,83 @@
 import React, {useEffect, useState} from 'react';
-import axios from 'axios';
-import HelloUser from "../HelloUser";
-import '../../myCss.css'
-import {Container, Row, Col, Form, Button, Image, Card, ProgressBar, Spinner, Navbar} from "react-bootstrap";
+import '../../NoFoundPage.css'
+import {Container, Row, Col, Form, Button, Card, Spinner} from "react-bootstrap";
 import FilterBar from "../FilterBar";
-import MyNavBar from "../MyNavBar";
-import ModalHistory from "../ModalHistory";
-
+import {useMyDataApi} from "../../utilityFunction/api";
+import Error from "../Error";
+import SearchBar from "../SearchBar";
 
 const API_KEY = '&api_key=d7419a73cefb6e53466365292f67b968'
-const URL_FOR_SEARCH = 'https://api.themoviedb.org/3/search/movie?query=';
-const URL_FOR_DISCOVER = 'https://api.themoviedb.org/3/discover/movie?';
-const DEFAULT_SEARCH = URL_FOR_SEARCH + 'a'
-const FETCH_ERROR_MSG = 'Something went wrong ...';
 const PHOTO_URL = "https://www.themoviedb.org/t/p/w440_and_h660_face"
+const URL_FOR_SEARCH = 'https://api.themoviedb.org/3/search/movie?query=';
 
-export default function HomePage({name}){
+/**
+ * The homepage lets a user search for movies to purchase and add them to his shopping cart.
+ * The user can use the filters from the filter bar in order to get the best result.
+ * When a movie has been searched, an API request is beeing send in order to get the list of
+ * relevant movies to present to the user.
+ * @returns {JSX.Element}
+ * @constructor
+ */
+export default function HomePage(){
 
     document.body.style.backgroundColor = "black"
 
-    const useDataApi = (initialUrl, initialData) => {
-
-        const [data, setData] = useState(initialData); // data to be fetched
-        const [url, setUrl] = useState(initialUrl); // any change on this state variable will trigger a fetch
-        const [isLoading, setIsLoading] = useState(false); // is it fetching?
-        const [isError, setIsError] = useState(false); // is there an error?
-
-        // we are using useEffect to fetch data from the API
-        // when the url state changes
-        useEffect(() => {
-            // this code returns a promise, but an effect can only return void or a cleanup function.
-            // so we need to wrap the promise in a function that returns void
-            const fetchData = async () => {
-
-                setIsError(false); // reset error state
-                setIsLoading(true); // set loading state to true to show loading indicator for example
-                try {
-                    const result = await axios(url + API_KEY); // not that you can pass full object to axios including method, url, data
-                    setData(result.data); // set data state
-                    setSearchHistory(new Set([...searchHistory, url]))
-                } catch (error) {
-                    setIsError(true); // an error occurred, set error state to true
-                } finally {
-                    setIsLoading(false); // set loading state to false to hide loading indicator
-                }
-            };
-
-            fetchData(); // execute the function above
-
-        }, [url]); // trigger the effect when url changes
-
-        return [{ data, isLoading, isError }, setUrl]; // return the data and the URL setter function
-    };
-
     const [filterQuery, setFilterQuery] = useState({});
-    const [query, setQuery] = useState(''); // query string to be searched is a state
-    const [{ data, isLoading, isError }, doFetch] = useDataApi(DEFAULT_SEARCH, {});
     const [searchHistory, setSearchHistory] = useState(new Set());
-    const [i,setI] =useState(0)
+    const [data, isLoading, isError, fetchDataGet] = useMyDataApi('get');
+    const [dataAddItem, isLoadingAddItem, isErrorAddItem, fetchData] = useMyDataApi('post');
+    const [numberOfItems,setNumberOfItems] = useState(0)
+    const [query, setQuery] = useState(''); // query string to be searched is a state
 
-    console.log(data.results)
+    useEffect(()=>{fetchData('/add-item')},[])
+    useEffect(()=>{dataAddItem.text !== "" && setNumberOfItems(dataAddItem.text)},[dataAddItem])
+    useEffect(()=>{handleClickSearch(URL_FOR_SEARCH + 'a')},[])
+    const handleAddItem =  (item) =>{
+        let params = {id:item.id, posterPath:PHOTO_URL + item.poster_path, title:item.title, releaseDate:item.release_date}
+        fetchData("/add-item",params)
+    }
+    const handleClickSearch = (url)=>{
+        setSearchHistory(new Set([...searchHistory, url]))
+        fetchDataGet(url + API_KEY)
+    }
+
     return(
         <>
-            {name && <HelloUser name={name}/> }
             <Container style={{marginTop:"3%"}}>
+                <Error isError={isErrorAddItem || isError}/>
                 <Row>
-                    <Col className={"col-2"}>
-                        <Row>
-                            <Button onClick={()=>{
-                                let tempQuery = ""
-                                for (const property in filterQuery)
-                                    tempQuery += `&${property}=${filterQuery[property]}`
-                                doFetch(URL_FOR_DISCOVER + tempQuery)
-
-                            }} variant="danger" type="submit">Search By Filter</Button>
-                        </Row>
-                        <FilterBar filterQuery={filterQuery} setFilterQuery={setFilterQuery}/>
+                    <Col className={"col-sm-2 col-12"}>
+                        <FilterBar filterQuery={filterQuery} setFilterQuery={setFilterQuery} handleClickSearch={handleClickSearch}/>
                     </Col>
-                    <Col className={"col-10"}>
-                        <Form className={"mb-3"}>
-                            <Row>
-                                <Col>
-                                    <Form.Group>
-                                        <Form.Control
-                                            type="text"
-                                            value={query}
-                                            onChange={event => {setQuery(event.target.value)
-                                                                                doFetch(URL_FOR_SEARCH + event.target.value)}}
-                                            placeholder="Search for movies..."
-                                        />
-                                    </Form.Group>
-                                </Col>
-                                <ModalHistory  className={"col-1"} doFetch={doFetch} searchHistory={searchHistory} setSearchHistory={setSearchHistory}/>
-                            </Row>
-
-                        </Form>
-                        {isError && <div className="alert alert-danger"> {FETCH_ERROR_MSG} </div>}
+                    <Col className={"col-9"}>
+                        <SearchBar query={query} handleClickSearch={handleClickSearch} searchHistory={searchHistory}
+                                   setQuery={setQuery} setSearchHistory={setSearchHistory}/>
                         {isLoading ? (<Row className={"justify-content-center mt-4"}><Spinner animation="border" variant="danger" /></Row>):
                             (
                                 <Row className={"justify-content-center"}>
-                                { data.results !== undefined && data.results.map((item) =>
-                                    <Col className={"col-2 mb-4 d-flex"} style={{width:"170px"}}>
+                                { data.results !== undefined &&
+                                    data.results.map((item) =>
+                                    <Col key={item.id} className={"col-2 mb-4 d-flex"} style={{width:"170px"}}>
                                         <Card style={{ background:"black",border:"1px solid gray"}} >
                                             <Card.Img variant="top" src={PHOTO_URL + item.poster_path} alt="Image description" />
                                             <Card.Body>
                                                 <Card.Title style={{color:"whitesmoke" ,fontSize:"15px"}}>{item.title}</Card.Title>
                                                 <Card.Text style={{color:"whitesmoke" ,fontSize:"12px"}}>{item.release_date}</Card.Text>
                                             </Card.Body>
-                                            <Button variant="warning" onClick={(event) =>{
-                                                setI(i +1)
-                                            }}>Add cart 3.99$</Button>
+                                            <Button variant="warning" onClick={async ()=>{
+                                                await handleAddItem(item)}}>Add cart 3.99$</Button>
                                         </Card>
                                     </Col>
-                            )}</Row>
+                            )}
+                                </Row>
                             )
                         }
                     </Col>
                 </Row>
-                <div className={"sticky-bottom mb-3"} style={{color:"whitesmoke",fontSize:"20px"}}>Items: <span className={"bg-warning"} style={{color:"black",background:"yellow", borderRadius:"4px", padding:"1px 3px 1px 3px"}}>{` ${i}`}</span></div>
+                <div className={"sticky-bottom mb-3"} style={{color:"whitesmoke",fontSize:"20px",backgroundColor:"black"}}>
+                    Items: <span className={"bg-warning"} style={{color:"black",background:"yellow", borderRadius:"4px", padding:"1px 3px 1px 3px"}}>{numberOfItems}</span>
+                    {isLoadingAddItem && <Spinner  className={"sticky-bottom"} animation="border" variant="danger" />}
+                </div>
             </Container>
         </>
     );
