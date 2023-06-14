@@ -21,6 +21,7 @@ export const useMyDataApi = (method) => {
      * @param params
      * @returns {Promise<void>}
      */
+
     const fetchData = async (url,params = {}) => {
         setIsError(false); // reset error state
         setIsLoading(true); // set loading state to true to show loading indicator, for example
@@ -46,3 +47,4 @@ export const useMyDataApi = (method) => {
 };
 
 
+console.log()
